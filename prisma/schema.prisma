@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id            String   @id @default(uuid())
+  clientOrderId String   @unique
+  pair          String
+  side          String   // "BUY" or "SELL"
+  price         Decimal
+  amount        Decimal
+  status        String   @default("PENDING") // "PENDING", "MATCHED", "SETTLED", "CANCELLED"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  match         Match?   @relation("BuyOrder")
+  matchSell     Match?   @relation("SellOrder")
+  settlement    Settlement?
+
+  @@index([pair, side, price])
+  @@index([status])
+  @@index([clientOrderId])
+}
+
+model Match {
+  id            String   @id @default(uuid())
+  buyOrderId    String
+  sellOrderId   String
+  price         Decimal
+  amount        Decimal
+  matchedAt     DateTime @default(now())
+
+  // Relations
+  buyOrder      Order    @relation("BuyOrder", fields: [buyOrderId], references: [id])
+  sellOrder     Order    @relation("SellOrder", fields: [sellOrderId], references: [id])
+  settlement    Settlement?
+
+  @@index([buyOrderId])
+  @@index([sellOrderId])
+}
+
+model Settlement {
+  id            String   @id @default(uuid())
+  matchId       String
+  txHash        String?  @unique
+  proofHash     String?
+  status        String   @default("PENDING") // "PENDING", "SUBMITTED", "CONFIRMED", "FAILED"
+  submittedAt   DateTime?
+  confirmedAt   DateTime?
+  createdAt     DateTime @default(now())
+
+  // Relations
+  match         Match    @relation(fields: [matchId], references: [id])
+  buyOrder      Order    @relation(fields: [buyOrderId], references: [id])
+  sellOrder     Order    @relation(fields: [sellOrderId], references: [id])
+
+  buyOrderId    String
+  sellOrderId   String
+
+  @@index([matchId])
+  @@index([status])
+}
+
+model Batch {
+  id            String   @id @default(uuid())
+  orderCount    Int
+  proofHash     String?
+  txHash        String?
+  status        String   @default("PENDING") // "PENDING", "PROVING", "SUBMITTED", "CONFIRMED", "FAILED"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  orders        Order[]
+
+  @@index([status])
+}
+
+model SequencerState {
+  id            String   @id @default("singleton")
+  lastOrderId   String?
+  lastBatchId   String?
+  stateRoot     String?
+  updatedAt     DateTime @updatedAt
+}

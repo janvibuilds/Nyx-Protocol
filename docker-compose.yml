@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: midnight-dark-pool-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: midnight_dark_pool
+      POSTGRES_USER: midnight
+      POSTGRES_PASSWORD: midnight_secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U midnight -d midnight_dark_pool"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Midnight Devnet (simulated)
+  midnight-devnet:
+    image: midnight-network/devnet:latest
+    container_name: midnight-dark-pool-devnet
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      NETWORK_ID: devnet
+      LOG_LEVEL: info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ZK Prover Service
+  prover:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.prover
+    container_name: midnight-dark-pool-prover
+    restart: unless-stopped
+    depends_on:
+      midnight-devnet:
+        condition: service_healthy
+    environment:
+      MIDNIGHT_DEVNET_URL: http://midnight-devnet:8080
+      WORKER_THREADS: 4
+      LOG_LEVEL: info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Sequencer Service
+  sequencer:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.sequencer
+    container_name: midnight-dark-pool-sequencer
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      prover:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+      - "8081:8081"
+    environment:
+      DATABASE_URL: postgresql://midnight:midnight_secret@postgres:5432/midnight_dark_pool
+      PROVER_URL: http://prover:3001
+      WEBSOCKET_PORT: 8081
+      HTTP_PORT: 3000
+      LOG_LEVEL: info
+      BATCH_SIZE: 50
+      BATCH_TIMEOUT_MS: 3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: midnight-dark-pool-frontend
+    restart: unless-stopped
+    depends_on:
+      sequencer:
+        condition: service_healthy
+    ports:
+      - "3001:3000"
+    environment:
+      NEXT_PUBLIC_SEQUENCER_URL: ws://localhost:8081
+      NEXT_PUBLIC_NETWORK_URL: http://localhost:8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: midnight-dark-pool-network
