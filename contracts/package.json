@@ -1,0 +1,44 @@
+{
+  "name": "midnight-dark-pool-contracts",
+  "version": "0.1.0",
+  "description": "Midnight Compact smart contracts for MEV-resistant dark pool",
+  "type": "module",
+  "scripts": {
+    "compile": "compact compile dark_pool.compact obj/dark_pool",
+    "compile:skip-zk": "compact compile --skip-zk dark_pool.compact obj/dark_pool",
+    "test": "jest",
+    "proof-server:start": "docker compose up -d",
+    "proof-server:stop": "docker compose down",
+    "deploy:standalone": "tsx src/deploy.ts standalone",
+    "deploy:preprod": "tsx src/deploy.ts preprod",
+    "verify": "echo 'Verify contract using Midnight wallet or SDK'"
+  },
+  "dependencies": {
+    "@midnight-ntwrk/midnight-js": "^4.0.4",
+    "@midnight-ntwrk/midnight-js-contracts": "^4.0.4",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "^4.0.4",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "^4.0.4",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "^4.0.4",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "^4.0.4",
+    "@midnight-ntwrk/midnight-js-protocol": "^4.1.1",
+    "@midnight-ntwrk/wallet-sdk": "^1.1.0",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.11.0",
+    "@types/ws": "^8.5.10",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "compact": {
+    "version": "0.31.1",
+    "path": "./obj"
+  }
+}

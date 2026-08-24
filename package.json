@@ -25,7 +25,8 @@
     "docker:logs": "docker-compose logs -f"
   },
   "dependencies": {
-    "@midnight-ntwrk/midnight-js": "^0.28.0",
+    "@midnight-ntwrk/midnight-js": "^4.0.4",
+    "@midnight-ntwrk/compact-js": "^2.5.0",
     "@prisma/client": "^5.0.0",
     "ws": "^8.16.0",
     "uuid": "^9.0.0"
@@ -43,6 +44,6 @@
     "ts-jest": "^29.1.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   }
 }

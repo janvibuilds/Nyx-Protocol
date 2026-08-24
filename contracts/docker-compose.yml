@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  proof-server:
+    image: midnightntwrk/proof-server:8.0.3
+    container_name: dark-pool-proof-server
+    ports:
+      - "6300:6300"
+    volumes:
+      - proof-server-params:/root/.cache
+    restart: on-failure
+
+volumes:
+  proof-server-params:
+    driver: local

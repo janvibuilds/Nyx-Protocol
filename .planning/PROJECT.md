@@ -97,7 +97,8 @@ Client Frontend → Order Submission → WebSocket Pipe → Node.js Sequencer
 | Batch triggers (50 orders OR 3s timeout) | Balances throughput with latency | — Pending |
 | Async PostgreSQL persistence | DB I/O would destroy latency guarantees if in execution loop | — Pending |
 | Optimistic pre-confirmation | Users get instant feedback while ZK proof runs in background | — Pending |
-| Local encryption (Witness Context) | Raw trade data never leaves client unencrypted | — Pending |
+| Local encryption (Witness Context) | Raw trade data never leaves client unencrypted | — Implemented in contract |
+| Single-file contract (dark_pool.compact) | All 6 circuits in one file instead of 3 separate files | — Implemented |
 
 ## Requirements
 
@@ -107,7 +108,7 @@ Client Frontend → Order Submission → WebSocket Pipe → Node.js Sequencer
 
 ### Active
 
-- [ ] REQ-01: Compact smart contract for batch verification and state root storage
+- [~] REQ-01: Compact smart contract for batch verification and state root storage (contract compiles, tests pass, devnet deployment pending)
 - [ ] REQ-02: TypeScript Mutex FIFO queue for order processing
 - [ ] REQ-03: In-memory matching engine (RAM-only, no DB in execution loop)
 - [ ] REQ-04: WebSocket server for encrypted order frames and receipts

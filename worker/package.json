@@ -12,7 +12,8 @@
     "lint:fix": "eslint src --ext .ts --fix"
   },
   "dependencies": {
-    "@midnight-ntwrk/midnight-js": "^0.28.0",
+    "@midnight-ntwrk/midnight-js": "^4.0.4",
+    "@midnight-ntwrk/compact-js": "^2.5.0",
     "dotenv": "^16.3.0",
     "winston": "^3.11.0"
   },
@@ -26,5 +27,8 @@
     "eslint": "^8.56.0",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }

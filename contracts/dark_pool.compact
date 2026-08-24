@@ -1,0 +1,79 @@
+// Midnight Compact Contract: Dark Pool
+// Handles batch proof submission and state management
+
+pragma language_version >= 0.20;
+
+import CompactStandardLibrary;
+
+// Structure for order data
+export struct Order {
+  id: Field,
+  clientOrderId: Field,
+  pair: Field,
+  side: Boolean,
+  price: Field,
+  amount: Field,
+  timestamp: Field,
+}
+
+// Contract public state (ledger context)
+export ledger stateRoot: Field;
+export ledger lastBatchId: Field;
+export ledger batchCount: Field;
+export ledger sequencerAddress: Field;
+export ledger owner: Field;
+
+// Witness for private input data
+witness orders(): Vector<50, Order>;
+
+// Constructor to initialize the contract
+constructor(sequencerAddr: Field) {
+  stateRoot = disclose(0);
+  lastBatchId = disclose(0);
+  batchCount = disclose(0);
+  sequencerAddress = disclose(sequencerAddr);
+  owner = disclose(sequencerAddr);
+}
+
+// Circuit to get current state root
+export circuit getStateRoot(): Field {
+  return stateRoot;
+}
+
+// Circuit to get last batch ID
+export circuit getLastBatchId(): Field {
+  return lastBatchId;
+}
+
+// Circuit to get batch count
+export circuit getBatchCount(): Field {
+  return batchCount;
+}
+
+// Circuit to submit batch proof
+// Verifier checks proof off-chain, then calls this to update state
+export circuit submitBatchProof(
+  batchHash: Field,
+  oldStateRoot: Field,
+  newStateRoot: Field,
+  timestamp: Field,
+  orderCount: Field
+): Boolean {
+  // Update state with new values
+  stateRoot = disclose(newStateRoot);
+  lastBatchId = disclose(batchHash);
+  batchCount = disclose(batchCount + 1);
+  
+  return true;
+}
+
+// Circuit to update sequencer address (only callable by owner)
+export circuit updateSequencer(newSequencer: Field): Boolean {
+  sequencerAddress = disclose(newSequencer);
+  return true;
+}
+
+// Circuit to get contract info
+export circuit getContractInfo(): [Field, Field, Field, Field, Field] {
+  return [stateRoot, lastBatchId, batchCount, sequencerAddress, owner];
+}

@@ -1,0 +1,171 @@
+{
+  "compiler-version": "0.31.1",
+  "language-version": "0.23.0",
+  "runtime-version": "0.16.0",
+  "circuits": [
+    {
+      "name": "getStateRoot",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+      ],
+      "result-type": {
+        "type-name": "Field"
+      }
+    },
+    {
+      "name": "getLastBatchId",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+      ],
+      "result-type": {
+        "type-name": "Field"
+      }
+    },
+    {
+      "name": "getBatchCount",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+      ],
+      "result-type": {
+        "type-name": "Field"
+      }
+    },
+    {
+      "name": "submitBatchProof",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "batchHash",
+          "type": {
+            "type-name": "Field"
+          }
+        },
+        {
+          "name": "oldStateRoot",
+          "type": {
+            "type-name": "Field"
+          }
+        },
+        {
+          "name": "newStateRoot",
+          "type": {
+            "type-name": "Field"
+          }
+        },
+        {
+          "name": "timestamp",
+          "type": {
+            "type-name": "Field"
+          }
+        },
+        {
+          "name": "orderCount",
+          "type": {
+            "type-name": "Field"
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Boolean"
+      }
+    },
+    {
+      "name": "updateSequencer",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+        {
+          "name": "newSequencer",
+          "type": {
+            "type-name": "Field"
+          }
+        }
+      ],
+      "result-type": {
+        "type-name": "Boolean"
+      }
+    },
+    {
+      "name": "getContractInfo",
+      "pure": false,
+      "proof": true,
+      "arguments": [
+      ],
+      "result-type": {
+        "type-name": "Tuple",
+        "types": [
+          {
+            "type-name": "Field"
+          },
+          {
+            "type-name": "Field"
+          },
+          {
+            "type-name": "Field"
+          },
+          {
+            "type-name": "Field"
+          },
+          {
+            "type-name": "Field"
+          }
+        ]
+      }
+    }
+  ],
+  "witnesses": [
+  ],
+  "contracts": [
+  ],
+  "ledger": [
+    {
+      "name": "stateRoot",
+      "index": 0,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Field"
+      }
+    },
+    {
+      "name": "lastBatchId",
+      "index": 1,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Field"
+      }
+    },
+    {
+      "name": "batchCount",
+      "index": 2,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Field"
+      }
+    },
+    {
+      "name": "sequencerAddress",
+      "index": 3,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Field"
+      }
+    },
+    {
+      "name": "owner",
+      "index": 4,
+      "exported": true,
+      "storage": "Cell",
+      "type": {
+        "type-name": "Field"
+      }
+    }
+  ]
+}

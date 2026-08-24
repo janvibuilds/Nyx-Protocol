@@ -21,20 +21,20 @@ Midnight Compact smart contracts for the MEV-resistant dark pool.
 
 ### Prerequisites
 
-- Midnight Compact v0.28+
-- Midnight devnet
+- Node.js 22+
+- Midnight Compact compiler
 
 ### Installation
 
 ```bash
-# Install Midnight CLI
-npm install -g @midnight-ntwrk/cli
+# Install dependencies
+npm install
 
 # Compile contracts
-midnight compile contracts/*.compact
+npm run compile
 
 # Run tests
-midnight test contracts/*.test.ts
+npm run test
 ```
 
 ## Development
@@ -44,27 +44,38 @@ midnight test contracts/*.test.ts
 ```
 contracts/
 ├── dark_pool.compact      # Main contract
-├── batch_verify.compact   # Batch verification circuit
-├── state_root.compact     # State root storage
-└── tests/
-    └── dark_pool.test.ts  # Contract tests
+├── tests/
+│   └── dark_pool.test.ts  # Contract tests
+├── package.json           # Dependencies
+├── tsconfig.json          # TypeScript config
+└── jest.config.ts         # Test config
 ```
 
 ### Writing Contracts
 
 ```compact
-// Example: Batch verification circuit
-circuit BatchVerify {
-  // Private inputs (Witness Context)
-  private input orders: EncryptedOrder[];
-  private input witness: Witness;
+// Example: Simple contract
+pragma language_version >= 0.20;
 
-  // Public inputs (Ledger Context)
-  public input stateRoot: Field;
-  public input batchHash: Field;
+import CompactStandardLibrary;
 
-  // Output
-  output proof: Proof;
+export contract MyContract {
+  export ledger stateRoot: Field;
+  export ledger owner: Field;
+
+  constructor(ownerAddr: Field) {
+    stateRoot = disclose(0);
+    owner = disclose(ownerAddr);
+  }
+
+  export circuit getStateRoot(): Field {
+    return stateRoot;
+  }
+
+  export circuit updateState(newState: Field): Boolean {
+    stateRoot = disclose(newState);
+    return true;
+  }
 }
 ```
 
@@ -72,50 +83,44 @@ circuit BatchVerify {
 
 ```bash
 # Run all tests
-midnight test
-
-# Run specific test
-midnight test contracts/tests/dark_pool.test.ts
+npm test
 
 # Run with coverage
-midnight test --coverage
+npm run test:coverage
+
+# Run specific test
+npm run test -- --testNamePattern="should initialize"
 ```
 
 ## Contract Interface
 
-### State
+### Structures
 
 ```compact
-state DarkPool {
-  // Encrypted state commitments
-  map<FieldName, Field> stateRoots;
-  
-  // Batch tracking
-  map<FieldName, Field> batches;
-  
-  // Configuration
-  field pairHash;
-  field sequencerPublicKey;
+export struct BatchInput {
+  batchHash: Field,
+  oldStateRoot: Field,
+  newStateRoot: Field,
+  timestamp: Field,
+  orderCount: Uint<32>,
+}
+
+export struct BatchOutput {
+  isValid: Boolean,
+  batchHash: Field,
+  newStateRoot: Field,
 }
 ```
 
-### Functions
+### Circuits
 
-```compact
-// Submit batch proof
-function submitBatchProof(
-  proof: Proof,
-  batchHash: Field,
-  newStateRoot: Field
-) -> Bool;
-
-// Verify state transition
-function verifyStateTransition(
-  oldStateRoot: Field,
-  newStateRoot: Field,
-  batchHash: Field
-) -> Bool;
-```
+- `getStateRoot(): Field` - Get current state root
+- `getLastBatchId(): Field` - Get last batch ID
+- `getBatchCount(): Uint<32>` - Get batch count
+- `verifyBatchProof(...): Boolean` - Verify batch proof
+- `submitBatchProof(...): Boolean` - Submit batch proof
+- `updateSequencer(Field): Boolean` - Update sequencer address
+- `getContractInfo(): [...]` - Get all contract info
 
 ## Security
 
@@ -155,17 +160,10 @@ The contract verifies:
 
 ```bash
 # Deploy to local devnet
-midnight deploy contracts/dark_pool.compact --network devnet
+npm run deploy:devnet
 
 # Verify deployment
-midnight verify <contract-address> --network devnet
-```
-
-### Testnet
-
-```bash
-# Deploy to testnet
-midnight deploy contracts/dark_pool.compact --network testnet
+npm run verify
 ```
 
 ## Troubleshooting
@@ -174,19 +172,19 @@ midnight deploy contracts/dark_pool.compact --network testnet
 
 Check Midnight Compact syntax:
 ```bash
-midnight compile contracts/dark_pool.compact --verbose
+npm run compile --verbose
 ```
 
-### Proof Verification Failed
+### Test Failures
 
-Verify proof format and circuit constraints:
+Check test output for specific failure:
 ```bash
-midnight verify-proof <proof-file> --verbose
+npm test --verbose
 ```
 
-### Insufficient DUST
+### Package Installation Failed
 
-Check contract balance:
+Check Node.js version (need 22+):
 ```bash
-midnight balance <contract-address> --network devnet
+node --version
 ```
