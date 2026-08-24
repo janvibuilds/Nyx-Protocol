@@ -114,15 +114,18 @@ Use Midnight's Kachina Dual-State architecture to:
   - Use Node.js Mutex implementation
   - RAM-only state management
   - Optimistic state root tracking
+  - **Sequencer decrypts orders using X25519 private key before matching — this is by design**
 
 #### REQ-SEQ-02: In-Memory Matching Engine
 - **Description:** Match buy/sell orders entirely in RAM
 - **Priority:** P0 (Critical)
 - **Acceptance Criteria:**
   - Price-time priority matching
-  - Support limit orders only (MVP)
+  - **Limit orders ONLY (MVP) — market orders are toxic in dark pools**
   - Single token pair
-  - No persistence during matching
+  - No persistence during execution loop
+  - **Partial fills supported — deducted amount, remaining stays in book**
+  - **Unfilled orders sit in RAM order book (Red-Black tree or ordered arrays)**
 - **Technical Notes:**
   - Order book maintained in RAM
   - No PostgreSQL access during execution
@@ -181,6 +184,8 @@ Use Midnight's Kachina Dual-State architecture to:
   - Use Node.js worker_threads
   - IPC for communication
   - Pool of workers for throughput
+  - **Worker uses @midnight-ntwrk/midnight-js to instantiate contract and call circuit functions**
+  - **SDK auto-generates ZK proofs from circuit function calls**
 
 #### REQ-ZK-02: Recursive ZK Proof
 - **Description:** Single proof verifying entire batch of trades
@@ -191,9 +196,10 @@ Use Midnight's Kachina Dual-State architecture to:
   - Proof is verifiable on-chain
   - Proof size is reasonable
 - **Technical Notes:**
-  - Recursive proof composition
-  - Circuit Context constraints
-  - Midnight ZK toolchain
+  - **Compact circuit keyword is the cryptographic boundary**
+  - **Assert statements inside circuits define the verification rules**
+  - **Midnight blockchain natively verifies proofs before allowing state updates**
+  - Worker confirms on-chain via tx.wait(), then writes to PostgreSQL directly via Prisma singleton
 
 ### 3.4 Client Layer (Frontend)
 
@@ -204,12 +210,25 @@ Use Midnight's Kachina Dual-State architecture to:
   - Token pair encrypted locally
   - Amount encrypted locally
   - Limit price encrypted locally
-  - Uses sequencer's public key
+  - Uses sequencer's X25519 public key
   - Raw data never leaves client unencrypted
 - **Technical Notes:**
-  - Witness Context encryption
-  - @midnight-ntwrk/midnight-js integration
-  - Local key management
+  - **X25519 encryption (Curve25519) for transit protection**
+  - **Frontend gets sequencer's public X25519 key during WebSocket handshake (GET_PUB_KEY event)**
+  - **@midnight-ntwrk/midnight-js for wallet connection and transaction signing**
+  - **Requires Midnight Lace wallet extension installed**
+
+#### REQ-CL-02: Dual Connection Model
+- **Description:** Frontend maintains two separate connections
+- **Priority:** P0 (Critical)
+- **Acceptance Criteria:**
+  - WebSocket connection to sequencer (via `ws` library) for order flow
+  - Midnight SDK connection to blockchain (via @midnight-ntwrk/midnight-js) for wallet/transactions
+  - Connections are independent and do not interfere
+- **Technical Notes:**
+  - Do not mix ws and midnight-js connections
+  - WebSocket handles order submission and receipts
+  - Midnight SDK handles wallet, signing, and blockchain queries
 
 #### REQ-CL-02: ClientOrderId Generation
 - **Description:** Unique UUID for each order for idempotency
@@ -249,7 +268,9 @@ Use Midnight's Kachina Dual-State architecture to:
   - Disaster recovery capability
 - **Technical Notes:**
   - Prisma ORM
-  - Async write from worker thread
+  - **Worker thread writes directly to PostgreSQL after tx.wait() confirms**
+  - **Use standard Prisma singleton instance in worker file**
+  - **Main thread never touches database**
   - PostgreSQL database
 
 ### 3.6 CLI Simulation

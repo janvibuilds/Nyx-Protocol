@@ -1,7 +1,4 @@
-version: '3.8'
-
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     container_name: midnight-dark-pool-db
@@ -20,7 +17,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # Midnight Devnet (simulated)
   midnight-devnet:
     image: midnight-network/devnet:latest
     container_name: midnight-dark-pool-devnet
@@ -31,12 +27,11 @@ services:
       NETWORK_ID: devnet
       LOG_LEVEL: info
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # ZK Prover Service
   prover:
     build:
       context: .
@@ -46,17 +41,18 @@ services:
     depends_on:
       midnight-devnet:
         condition: service_healthy
+    ports:
+      - "3001:3001"
     environment:
       MIDNIGHT_DEVNET_URL: http://midnight-devnet:8080
       WORKER_THREADS: 4
       LOG_LEVEL: info
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/health"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Sequencer Service
   sequencer:
     build:
       context: .
@@ -73,19 +69,21 @@ services:
       - "8081:8081"
     environment:
       DATABASE_URL: postgresql://midnight:midnight_secret@postgres:5432/midnight_dark_pool
-      PROVER_URL: http://prover:3001
       WEBSOCKET_PORT: 8081
       HTTP_PORT: 3000
-      LOG_LEVEL: info
+      PRIVATE_KEY: ${PRIVATE_KEY}
       BATCH_SIZE: 50
       BATCH_TIMEOUT_MS: 3000
+      WORKER_THREADS: 4
+      PROVER_URL: http://prover:3001
+      MIDNIGHT_DEVNET_URL: http://midnight-devnet:8080
+      LOG_LEVEL: info
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # Frontend (Next.js)
   frontend:
     build:
       context: .
@@ -96,12 +94,12 @@ services:
       sequencer:
         condition: service_healthy
     ports:
-      - "3001:3000"
+      - "3002:3000"
     environment:
       NEXT_PUBLIC_SEQUENCER_URL: ws://localhost:8081
       NEXT_PUBLIC_NETWORK_URL: http://localhost:8080
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
       interval: 10s
       timeout: 5s
       retries: 5

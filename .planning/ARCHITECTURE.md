@@ -367,31 +367,50 @@ Midnight Ledger                    PostgreSQL Audit
 
 ## Security Model
 
+### Design Philosophy
+
+**The architecture explicitly trades "Operator Blindness" for "Execution Speed."**
+
+The Node.js Sequencer is trusted with visibility of the trade data to achieve sub-15ms matching, but is cryptographically restricted from stealing or forging via ZK proofs.
+
 ### What Each Context Sees
 
-| Context | Sees | Does NOT See |
-|---------|------|--------------|
-| **Witness Context** | Raw order data (locally) | Other users' orders |
-| **Sequencer Context** | Encrypted order frames | Plaintext trade data |
-| **Circuit Context** | Encrypted batch data | Plaintext trade data |
-| **Ledger Context** | ZK proofs only | Any trade data |
-| **PostgreSQL** | Finalized settlement records | Real-time order data |
+| Context | Sees | Does NOT See | Protection Mechanism |
+|---------|------|--------------|---------------------|
+| **Witness Context** | Raw order data (locally) | Other users' orders | Local encryption with sequencer's X25519 public key |
+| **Sequencer Context** | **Plaintext** after decryption | Other users' sessions | ZK proofs prevent forging; transit encryption prevents mempool MEV |
+| **Circuit Context** | Plaintext batch data | N/A | Generates ZK proof proving correct execution |
+| **Ledger Context** | ZK proofs only | Any trade data | Blockchain verifies assert statements in circuits |
+| **PostgreSQL** | Finalized settlement records | Real-time order data | Written by worker thread after on-chain confirmation |
 
 ### MEV Resistance
 
 ```
-Attack Vector: Front-running
-Mitigation: Orders encrypted before leaving client
-Result: MEV bots see only ciphertext
+Attack Vector: Front-running (public mempool)
+Mitigation: Orders encrypted with sequencer's X25519 public key before leaving client
+Result: MEV bots see only ciphertext in transit
 
 Attack Vector: Sandwich attacks
-Mitigation: No order data visible in mempool
+Mitigation: No order data visible in public mempool
 Result: No price manipulation possible
 
+Attack Vector: Sequencer operator theft
+Mitigation: ZK proofs prove correct execution; operator cannot forge proofs
+Result: Operator sees plaintext but cannot steal
+
 Attack Vector: Order flow analysis
-Mitigation: Only ZK proofs on-chain
-Result: No trade frequency data leaked
+Mitigation: Only ZK proofs on-chain; plaintext never persisted during execution loop
+Result: No trade frequency data leaked on-chain
 ```
+
+### Cryptographic Leash
+
+The ZK proof acts as a "cryptographic leash":
+1. Client encrypts order with sequencer's X25519 public key (transit protection)
+2. Sequencer decrypts and matches in RAM (trusted operator model)
+3. Worker thread generates zk-SNARK proving correct execution
+4. Midnight blockchain verifies the proof before updating state
+5. Sequencer cannot forge matches because it cannot forge ZK proofs
 
 ---
 

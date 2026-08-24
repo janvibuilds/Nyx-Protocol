@@ -32,6 +32,7 @@
 **What's NOT done:**
 - CHECK 3: Contract deployment to devnet (requires running Midnight devnet)
 - Devnet integration testing
+- **Contract needs assert rules added for trade validation** (circuit keyword = proof boundary, blockchain verifies assert statements)
 
 **Note:** PHASE1_COMPLETE.md and PHASE1_GATE_CHECK.md contain inaccurate claims:
 - PHASE1_COMPLETE.md lists `state_root.compact` and `batch_verify.compact` as created — these files do NOT exist
@@ -47,6 +48,11 @@
 | 2026-08-24 | Phase 1 contracts created | Compact smart contracts compiled and tested |
 | 2026-08-24 | Package versions fixed | Updated to actual Midnight package versions |
 | 2026-08-24 | Docs corrected | Fixed misleading completion claims in planning docs |
+| 2026-08-24 | Security model clarified | Sequencer sees plaintext by design; ZK proofs prevent forging |
+| 2026-08-24 | Key management clarified | X25519 for encryption, Ed25519 for signing, stored as env vars |
+| 2026-08-24 | Frontend model clarified | Dual connections: WebSocket (sequencer) + midnight-js (blockchain) |
+| 2026-08-24 | Matching rules clarified | Limit orders only, partial fills supported, no market orders |
+| 2026-08-24 | Worker flow clarified | Worker writes PostgreSQL directly after on-chain confirmation |
 
 ## Blockers
 

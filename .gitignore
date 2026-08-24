@@ -1,12 +1,16 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # Build output
 dist/
 build/
 .next/
 out/
+*.tsbuildinfo
 
 # Environment variables
 .env
@@ -46,6 +50,9 @@ prisma/migrations/
 
 # Docker
 docker-compose.override.yml
+
+# Compiled contracts
+contracts/dist/
 
 # Temporary
 tmp/

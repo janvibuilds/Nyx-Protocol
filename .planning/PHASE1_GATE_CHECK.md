@@ -101,14 +101,15 @@ npm test
 
 - Compact v0.20+ syntax with flat structure (no contract block)
 - Field type used for all state (no Uint comparisons)
-- ZK proof verification simplified for MVP
-- Full validation will be in the sequencer layer
+- **The `circuit` keyword is the cryptographic boundary — Midnight SDK auto-generates ZK proofs from circuit function calls**
+- **Assert statements inside circuits define the on-chain verification rules**
+- **Current contract needs assert rules added for trade validation (submitBatchProof just updates state without validation)**
 
-## Phase 1 Status: COMPLETE ✅
+## Phase 1 Status: ~90% COMPLETE
 
-All verifiable gate checks pass. Contract compiles, tests pass, and circuits are functional.
-Phase 2 (Sequencer Core) can begin.
+Contract compiles, tests pass, and circuits are functional. Only devnet deployment remains.
+Phase 2 (Sequencer Core) can begin in parallel.
 
 ---
 
-*Gate check completed: 2026-08-24*
+*Gate check completed: 2026-08-24 | Updated: 2026-08-24*

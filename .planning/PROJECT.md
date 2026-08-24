@@ -91,14 +91,16 @@ Client Frontend → Order Submission → WebSocket Pipe → Node.js Sequencer
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| WebSocket-only protocol | Bidirectional streaming eliminates HTTP connection overhead for <15ms soft finality | — Pending |
-| Mutex-locked FIFO queue | Single-threaded matching in RAM avoids race conditions and state contention | — Pending |
-| Worker threads for ZK proving | ZK proof generation is CPU-intensive; must not block main event loop | — Pending |
-| Batch triggers (50 orders OR 3s timeout) | Balances throughput with latency | — Pending |
-| Async PostgreSQL persistence | DB I/O would destroy latency guarantees if in execution loop | — Pending |
-| Optimistic pre-confirmation | Users get instant feedback while ZK proof runs in background | — Pending |
-| Local encryption (Witness Context) | Raw trade data never leaves client unencrypted | — Implemented in contract |
-| Single-file contract (dark_pool.compact) | All 6 circuits in one file instead of 3 separate files | — Implemented |
+| **Sequencer sees plaintext** | Trades operator blindness for execution speed. MEV resistance comes from transit encryption, not sequencer blindness. ZK proofs prevent forging. | — Clarified |
+| **Circuit keyword = proof boundary** | Midnight SDK auto-generates ZK proofs when calling circuit functions. Blockchain verifies assert statements inside circuits. | — Clarified |
+| **X25519 + Ed25519 keys** | X25519 for encryption, Ed25519 for signing pre-confirmations. Stored as env vars. Frontend gets public X25519 key during WebSocket handshake. | — Clarified |
+| **Dual frontend connections** | Frontend connects to sequencer via WebSocket (ws) AND to Midnight blockchain via @midnight-ntwrk/midnight-js. Separate connections. | — Clarified |
+| **Midnight Lace wallet required** | Frontend requires Midnight Lace wallet extension for user key management and transaction signing. | — Clarified |
+| **Limit orders only (MVP)** | Market orders in dark pools are toxic — infinite slippage risk. Unfilled orders sit in RAM order book. Partial fills supported. | — Clarified |
+| **Worker writes PostgreSQL** | Worker confirms on-chain, writes to PostgreSQL directly via Prisma singleton. Main thread never touches DB. | — Clarified |
+| **Preprod = Midnight testnet** | Deploy contract via Midnight CLI tools. Sequencer runs on cloud VPS. Connect to Preprod RPC node URL. | — Clarified |
+| **productX = X/Twitter** | Create X/Twitter profile for hackathon submission. | — Clarified |
+| **15ms = server processing only** | Time from sequencer receiving WebSocket frame to emitting signed receipt. Network latency is separate. | — Clarified |
 
 ## Requirements
 

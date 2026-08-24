@@ -59,6 +59,21 @@ export circuit submitBatchProof(
   timestamp: Field,
   orderCount: Field
 ): Boolean {
+  // Validation: prevent replay attacks
+  assert(oldStateRoot == stateRoot, "Old state root must match current state root");
+
+  // Validation: prevent clearing state
+  assert(newStateRoot != 0, "New state root cannot be zero");
+
+  // Validation: prevent empty batches
+  assert(orderCount > 0, "Batch must contain at least one order");
+
+  // Validation: prevent time manipulation
+  assert(timestamp > lastBatchId, "Timestamp must be greater than last batch ID");
+
+  // Validation: prevent empty batch hash
+  assert(batchHash != 0, "Batch hash cannot be zero");
+
   // Update state with new values
   stateRoot = disclose(newStateRoot);
   lastBatchId = disclose(batchHash);
