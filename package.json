@@ -20,13 +20,14 @@
     "lint:sequencer": "cd sequencer && npm run lint",
     "lint:frontend": "cd frontend && npm run lint",
     "demo:simulate": "cd cli && npm run simulate",
+    "db:migrate": "npx prisma migrate dev",
+    "db:push": "npx prisma db push",
+    "db:studio": "npx prisma studio",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f"
   },
   "dependencies": {
-    "@midnight-ntwrk/midnight-js": "^4.0.4",
-    "@midnight-ntwrk/compact-js": "^2.5.0",
     "@prisma/client": "^5.0.0",
     "ws": "^8.16.0",
     "uuid": "^9.0.0"

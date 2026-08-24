@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,17 +11,17 @@ model Order {
   id            String   @id @default(uuid())
   clientOrderId String   @unique
   pair          String
-  side          String   // "BUY" or "SELL"
+  side          String
   price         Decimal
   amount        Decimal
-  status        String   @default("PENDING") // "PENDING", "MATCHED", "SETTLED", "CANCELLED"
+  status        String   @default("PENDING")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  batchId       String?
 
-  // Relations
-  match         Match?   @relation("BuyOrder")
-  matchSell     Match?   @relation("SellOrder")
-  settlement    Settlement?
+  buyMatches    Match[]  @relation("BuyOrder")
+  sellMatches   Match[]  @relation("SellOrder")
+  batch         Batch?   @relation(fields: [batchId], references: [id])
 
   @@index([pair, side, price])
   @@index([status])
@@ -39,7 +36,6 @@ model Match {
   amount        Decimal
   matchedAt     DateTime @default(now())
 
-  // Relations
   buyOrder      Order    @relation("BuyOrder", fields: [buyOrderId], references: [id])
   sellOrder     Order    @relation("SellOrder", fields: [sellOrderId], references: [id])
   settlement    Settlement?
@@ -50,21 +46,15 @@ model Match {
 
 model Settlement {
   id            String   @id @default(uuid())
-  matchId       String
+  matchId       String   @unique
   txHash        String?  @unique
   proofHash     String?
-  status        String   @default("PENDING") // "PENDING", "SUBMITTED", "CONFIRMED", "FAILED"
+  status        String   @default("PENDING")
   submittedAt   DateTime?
   confirmedAt   DateTime?
   createdAt     DateTime @default(now())
 
-  // Relations
   match         Match    @relation(fields: [matchId], references: [id])
-  buyOrder      Order    @relation(fields: [buyOrderId], references: [id])
-  sellOrder     Order    @relation(fields: [sellOrderId], references: [id])
-
-  buyOrderId    String
-  sellOrderId   String
 
   @@index([matchId])
   @@index([status])
@@ -75,11 +65,10 @@ model Batch {
   orderCount    Int
   proofHash     String?
   txHash        String?
-  status        String   @default("PENDING") // "PENDING", "PROVING", "SUBMITTED", "CONFIRMED", "FAILED"
+  status        String   @default("PENDING")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  // Relations
   orders        Order[]
 
   @@index([status])
