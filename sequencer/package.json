@@ -4,6 +4,7 @@
   "description": "High-frequency sequencer for Midnight Dark Pool",
   "main": "dist/index.js",
   "scripts": {
+    "postinstall": "chmod +x node_modules/.bin/* 2>/dev/null || true",
     "dev": "npx ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
