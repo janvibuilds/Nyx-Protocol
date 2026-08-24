@@ -78,9 +78,22 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-8">
-        <div className="max-w-7xl mx-auto px-6 text-center text-gray-500 text-sm">
-          © 2026 Midnight Dark Pool. Built on Cardano.
+      <footer className="border-t border-white/10 py-12">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-midnight-500 rounded-lg" />
+              <span className="text-lg font-bold gradient-text">Midnight Dark Pool</span>
+            </div>
+            <div className="flex items-center gap-6 text-sm text-gray-400">
+              <a href="/trade" className="hover:text-white transition-colors">Launch App</a>
+              <a href="https://docs.midnight.network" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">Docs</a>
+              <a href="https://github.com/midnight-network" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
+            </div>
+          </div>
+          <div className="mt-6 pt-6 border-t border-white/5 text-center text-gray-600 text-xs">
+            Built on <span className="text-midnight-400">Midnight Network</span> — Privacy-first blockchain on Cardano
+          </div>
         </div>
       </footer>
     </main>

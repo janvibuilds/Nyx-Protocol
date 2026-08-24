@@ -26,13 +26,13 @@ export function useOrderBook() {
   const updateFromMessage = useCallback((message: OrderBookUpdateMessage) => {
     if (message.type !== MessageType.ORDER_BOOK_UPDATE) return
 
-    const newBids = message.bids.map((b, i) => ({
+    const newBids = message.bids.map((b: { price: string; quantity: string }, i: number) => ({
       price: b.price,
       quantity: b.quantity,
       id: `bid-${message.timestamp}-${i}`,
     }))
 
-    const newAsks = message.asks.map((a, i) => ({
+    const newAsks = message.asks.map((a: { price: string; quantity: string }, i: number) => ({
       price: a.price,
       quantity: a.quantity,
       id: `ask-${message.timestamp}-${i}`,

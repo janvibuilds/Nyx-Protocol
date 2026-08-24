@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import { encryptOrder } from '@/lib/crypto'
-import { MessageType, PreConfirmationMessage, ErrorMessage } from '@/lib/protocol'
+import { MessageType, PreConfirmationMessage, ErrorMessage, Message } from '@/lib/protocol'
 import { Receipt } from '@/types'
 
 export interface PendingOrder {
@@ -17,51 +17,43 @@ interface UseTradeOptions {
   isConnected: boolean
   sequencerPubKey: string | null
   sendMessage: (msg: any) => void
-  onMessage: (handler: (msg: any) => void) => void
 }
 
-export function useTrade({ isConnected, sequencerPubKey, sendMessage, onMessage }: UseTradeOptions) {
+export function useTrade({ isConnected, sequencerPubKey, sendMessage }: UseTradeOptions) {
   const [pendingOrders, setPendingOrders] = useState<PendingOrder[]>([])
   const [lastReceipt, setLastReceipt] = useState<Receipt | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [latencyMs, setLatencyMs] = useState<number | null>(null)
 
-  const messageHandlerSet = useRef(false)
-
-  const ensureMessageHandler = useCallback(() => {
-    if (messageHandlerSet.current) return
-    messageHandlerSet.current = true
-
-    onMessage((msg: any) => {
-      if (msg.type === MessageType.PRE_CONFIRMATION) {
-        const preConf = msg as PreConfirmationMessage
-        setPendingOrders((prev) =>
-          prev.filter((o) => o.clientOrderId !== preConf.receipt.clientOrderId)
-        )
-        const receipt: Receipt = {
-          matchId: preConf.receipt.clientOrderId,
-          buyOrderId: '',
-          sellOrderId: '',
-          quantity: '',
-          price: '',
-          buyerAddress: '',
-          sellerAddress: '',
-          commitmentHash: '',
-          nullifierHash: '',
-          timestamp: preConf.receipt.timestamp,
-        }
-        setLastReceipt(receipt)
-        setLatencyMs(Date.now() - preConf.receipt.timestamp)
+  const handleMessage = useCallback((msg: Message) => {
+    if (msg.type === MessageType.PRE_CONFIRMATION) {
+      const preConf = msg as PreConfirmationMessage
+      setPendingOrders((prev) =>
+        prev.filter((o) => o.clientOrderId !== preConf.receipt.clientOrderId)
+      )
+      const receipt: Receipt = {
+        matchId: preConf.receipt.clientOrderId,
+        buyOrderId: '',
+        sellOrderId: '',
+        quantity: '',
+        price: '',
+        buyerAddress: '',
+        sellerAddress: '',
+        commitmentHash: '',
+        nullifierHash: '',
+        timestamp: preConf.receipt.timestamp,
       }
+      setLastReceipt(receipt)
+      setLatencyMs(Date.now() - preConf.receipt.timestamp)
+    }
 
-      if (msg.type === MessageType.ERROR) {
-        const errMsg = msg as ErrorMessage
-        setError(errMsg.error)
-        setPendingOrders([])
-      }
-    })
-  }, [onMessage])
+    if (msg.type === MessageType.ERROR) {
+      const errMsg = msg as ErrorMessage
+      setError(errMsg.error)
+      setPendingOrders([])
+    }
+  }, [])
 
   const submitOrder = useCallback(
     async (side: 'BUY' | 'SELL', price: number, amount: number): Promise<string> => {
@@ -73,8 +65,6 @@ export function useTrade({ isConnected, sequencerPubKey, sendMessage, onMessage 
         setError('Sequencer public key not available')
         throw new Error('Sequencer public key not available')
       }
-
-      ensureMessageHandler()
 
       const clientOrderId = crypto.randomUUID()
       setIsSubmitting(true)
@@ -120,7 +110,7 @@ export function useTrade({ isConnected, sequencerPubKey, sendMessage, onMessage 
         throw err
       }
     },
-    [isConnected, sequencerPubKey, sendMessage, ensureMessageHandler]
+    [isConnected, sequencerPubKey, sendMessage]
   )
 
   const clearError = useCallback(() => {
@@ -135,5 +125,6 @@ export function useTrade({ isConnected, sequencerPubKey, sendMessage, onMessage 
     error,
     submitOrder,
     clearError,
+    handleMessage,
   }
 }
