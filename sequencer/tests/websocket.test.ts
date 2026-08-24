@@ -114,6 +114,7 @@ describe('DarkPoolServer', () => {
     const port = typeof addr === 'object' && addr ? addr.port : 0;
 
     const ws = new WebSocket(`ws://localhost:${port}`);
+    wsClients.push(ws);
     ws.on('open', () => {
       ws.send(JSON.stringify({ type: MessageType.GET_PUB_KEY }));
     });
@@ -133,6 +134,7 @@ describe('DarkPoolServer', () => {
     const port = typeof addr === 'object' && addr ? addr.port : 0;
 
     const ws = new WebSocket(`ws://localhost:${port}`);
+    wsClients.push(ws);
     let messageCount = 0;
 
     ws.on('open', () => {
@@ -164,6 +166,7 @@ describe('DarkPoolServer', () => {
     const port = typeof addr === 'object' && addr ? addr.port : 0;
 
     const ws = new WebSocket(`ws://localhost:${port}`);
+    wsClients.push(ws);
     ws.on('open', () => {
       ws.send(JSON.stringify({ type: 'INVALID_TYPE' }));
     });
@@ -182,6 +185,7 @@ describe('DarkPoolServer', () => {
     const port = typeof addr === 'object' && addr ? addr.port : 0;
 
     const ws = new WebSocket(`ws://localhost:${port}`);
+    wsClients.push(ws);
     ws.on('open', () => {
       ws.send(JSON.stringify({ data: 'no type' }));
     });
@@ -204,6 +208,7 @@ describe('DarkPoolServer', () => {
 
     for (let i = 0; i < totalClients; i++) {
       const ws = new WebSocket(`ws://localhost:${port}`);
+      wsClients.push(ws);
       ws.on('open', () => {
         if (server.getClientCount() === totalClients) {
           server.broadcast(JSON.stringify({ type: 'TEST_BROADCAST', data: 'hello' }));

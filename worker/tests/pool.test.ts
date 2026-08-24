@@ -80,9 +80,10 @@ describe('WorkerPool', () => {
     jest.clearAllMocks();
   });
 
-  afterEach(async () => {
+  afterEach(() => {
     if (pool) {
-      await pool.shutdown();
+      pool.shutdown().catch(() => {});
+      pool = null as any;
     }
   });
 
@@ -113,7 +114,7 @@ describe('WorkerPool', () => {
     const workers = MockWorker.instances;
     workers[0].postMessage.mockImplementation(() => {});
 
-    const promise = pool.submitBatch(createBatchRequest('batch-1'));
+    pool.submitBatch(createBatchRequest('batch-1')).catch(() => {});
 
     expect(pool.getQueueSize()).toBe(1);
   });
@@ -124,7 +125,7 @@ describe('WorkerPool', () => {
     const workers = MockWorker.instances;
     const batch = createBatchRequest('batch-1');
 
-    pool.submitBatch(batch);
+    pool.submitBatch(batch).catch(() => {});
 
     expect(workers[0].postMessage).toHaveBeenCalledWith(batch);
 
@@ -199,8 +200,8 @@ describe('WorkerPool', () => {
     const workers = MockWorker.instances;
     workers[0].postMessage.mockImplementation(() => {});
 
-    pool.submitBatch(createBatchRequest('batch-1'));
-    pool.submitBatch(createBatchRequest('batch-2'));
+    pool.submitBatch(createBatchRequest('batch-1')).catch(() => {});
+    pool.submitBatch(createBatchRequest('batch-2')).catch(() => {});
 
     await expect(pool.submitBatch(createBatchRequest('batch-3'))).rejects.toThrow(
       'Worker pool queue overflow'
@@ -251,8 +252,8 @@ describe('WorkerPool', () => {
     workers[0].postMessage.mockImplementation(() => {});
     workers[1].postMessage.mockImplementation(() => {});
 
-    pool.submitBatch(createBatchRequest('batch-1'));
-    pool.submitBatch(createBatchRequest('batch-2'));
+    pool.submitBatch(createBatchRequest('batch-1')).catch(() => {});
+    pool.submitBatch(createBatchRequest('batch-2')).catch(() => {});
 
     expect(workers[0].postMessage).toHaveBeenCalledTimes(1);
     expect(workers[1].postMessage).toHaveBeenCalledTimes(1);
@@ -284,10 +285,10 @@ describe('WorkerPool', () => {
     const workers = MockWorker.instances;
     workers[0].postMessage.mockImplementation(() => {});
 
-    pool.submitBatch(createBatchRequest('batch-1'));
+    pool.submitBatch(createBatchRequest('batch-1')).catch(() => {});
     expect(pool.getQueueSize()).toBe(1);
 
-    pool.submitBatch(createBatchRequest('batch-2'));
+    pool.submitBatch(createBatchRequest('batch-2')).catch(() => {});
     expect(pool.getQueueSize()).toBe(2);
   });
 
