@@ -30,8 +30,34 @@ if (parentPort) {
   parentPort.postMessage({ type: 'WORKER_READY' });
   logger.info('[Worker] Ready to process batch requests');
 } else {
-  logger.error('[Worker] No parent port available. Worker must be spawned as a worker thread.');
-  process.exit(1);
+  // Standalone mode for development
+  logger.info('[Worker] Running in standalone mode (no parent thread)');
+  logger.info('[Worker] Accepting batch requests via stdin. Type JSON and press Enter.');
+
+  process.stdin.setEncoding('utf-8');
+  let buffer = '';
+
+  process.stdin.on('data', async (chunk: string) => {
+    buffer += chunk;
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      try {
+        const message: BatchRequest = JSON.parse(line);
+        logger.info(`[Worker] Received batch request: ${message.batchId}`);
+        await handler.handleMessage(message, (response) => {
+          process.stdout.write(JSON.stringify(response) + '\n');
+          logger.info(`[Worker] Sent response for batch ${message.batchId}: ${response.status}`);
+        });
+      } catch (err) {
+        logger.error(`[Worker] Invalid input: ${err}`);
+      }
+    }
+  });
+
+  logger.info('[Worker] Standing by...');
 }
 
 process.on('uncaughtException', (error) => {
