@@ -1,5 +1,7 @@
 # Midnight MEV-Resistant Dark Pool
 
+[![CI](https://github.com/janvibuilds/Nyx-Protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/janvibuilds/Nyx-Protocol/actions/workflows/ci.yml)
+
 A zero-knowledge decentralized dark pool built on Midnight Network's Kachina Dual-State architecture, eliminating MEV front-running through encrypted order submission and ZK-proof verification.
 
 ## Overview
