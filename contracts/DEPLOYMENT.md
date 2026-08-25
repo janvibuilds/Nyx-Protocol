@@ -33,26 +33,65 @@ npm run deploy:standalone
 
 ## Deploy to Preprod Testnet
 
-### 1. Get Test Tokens
-
-1. Install Lace wallet or use Midnight wallet SDK
-2. Get tNIGHT from faucet
-3. Register for DUST generation
-
-### 2. Deploy
+### 1. Generate a Wallet Seed
 
 ```bash
-npm run deploy:preprod
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-## Verify Deployment
+Copy the output and add it to your `.env`:
+
+```
+WALLET_SEED=<paste-here>
+```
+
+**Never commit your seed to git.**
+
+### 2. Fund the Wallet
+
+1. Your wallet address is printed during deployment (starts with `mn_addr_preprod1...`)
+2. Get tNIGHT from the **Nethermind preprod faucet**: https://midnight-tmnight-preprod.nethermind.dev/
+   - Paste your unshielded address, complete captcha, request tokens (~1000 tNIGHT)
+   - If the faucet times out, retry or use the official faucet: https://faucet.preprod.midnight.network/
+3. Register for tDUST generation (use Lace wallet "Generate tDUST" button, or the wallet SDK)
+
+### 3. Start Proof Server
+
+The proof server always runs **locally** in Docker, even for public testnets:
+
+```bash
+npm run proof-server:start
+curl http://127.0.0.1:6300/api/v1/health/zkConfig   # wait until this returns ok
+```
+
+### 4. Deploy
+
+```bash
+NODE_OPTIONS="--max-old-space-size=8192" npm run deploy:preprod
+```
+
+> The heap flag is required — wallet sync on public testnets OOMs with Node's default ~4GB.
+
+### 5. Verify
 
 After deployment, you'll see:
 ```
-Contract deployed successfully!
-Contract address: 0300abc123...
+  Contract deployed successfully!
+  Address: c482622f4e0be2b9fd43b43b817e8d5fbcca4bde7...
 Deployment info saved to: deployment.json
 ```
+
+Check it on the explorer: https://preprod.midnightexplorer.com — search your contract address, should show **DEPLOYED**.
+
+## Deploy to Preview Testnet
+
+Same flow, but swap `preprod` → `preview`:
+
+```bash
+npm run deploy:preview
+```
+
+Preview uses https://preview.midnightexplorer.com — useful if preprod wallet sync is unstable.
 
 ## Interact with Contract
 
@@ -86,45 +125,47 @@ console.log('Result:', result.result);
 ### Proof Server Not Starting
 
 ```bash
-# Check Docker is running
-docker ps
-
-# Check container logs
-docker logs dark-pool-proof-server
-
-# Restart
-npm run proof-server:stop
-npm run proof-server:start
+docker ps                                        # check Docker is running
+docker logs dark-pool-proof-server               # check logs
+npm run proof-server:stop; npm run proof-server:start
 ```
 
 ### Deployment Fails
 
-1. Check proof server is running: `curl http://127.0.0.1:6300`
-2. Check indexer is accessible: `curl http://127.0.0.1:8088/api/v4/graphql`
-3. Verify contract is compiled: `ls obj/dark_pool/contract/`
+1. Check proof server: `curl http://127.0.0.1:6300/api/v1/health/zkConfig`
+2. Check indexer (preprod): `curl https://indexer.preprod.midnight.network/api/v4/graphql`
+3. Verify compiled contract: `ls obj/dark_pool/contract/`
+4. WALLET_SEED not set? → add to `.env`
 
-### Insufficient DUST
+### Out of Memory
 
-For preprod, ensure wallet has:
-- tNIGHT tokens
-- DUST registration completed
+```
+FATAL ERROR: Ineffective mark-compacts near heap limit
+```
+
+Prefix with `NODE_OPTIONS="--max-old-space-size=8192"`
+
+### Preprod Faucet Down
+
+Use the Nethermind faucet: https://midnight-tmnight-preprod.nethermind.dev/
+Or try preview network instead: `npm run deploy:preview`
 
 ## Network Endpoints
 
-| Network | Indexer | Proof Server |
-|---------|---------|--------------|
-| Standalone | http://127.0.0.1:8088 | http://127.0.0.1:6300 |
-| Preprod | https://indexer.preprod.api.midnight.network | https://proof-server.preprod.api.midnight.network |
+| Network  | Node RPC | Indexer | Proof Server |
+|----------|----------|---------|--------------|
+| Standalone | ws://127.0.0.1:9944 | http://127.0.0.1:8088 | http://127.0.0.1:6300 |
+| Preview  | https://rpc.preview.midnight.network | https://indexer.preview.midnight.network | http://127.0.0.1:6300 |
+| Preprod  | https://rpc.preprod.midnight.network | https://indexer.preprod.midnight.network | http://127.0.0.1:6300 |
 
 ## Files Created
 
-- `deployment.json` - Contract address and deployment info
-- `docker-compose.yml` - Proof server configuration
-- `src/deploy.ts` - Deployment script
+- `deployment.json` — Contract address, network, and wallet address
+- `src/deploy.ts` — Deployment script (supports standalone/preview/preprod)
 
 ## Next Steps
 
 After deployment:
-1. Save contract address
-2. Update sequencer to use deployed contract
-3. Test batch submission flow
+1. Save contract address from `deployment.json`
+2. Update sequencer to use deployed contract address
+3. Test batch submission flow end-to-end

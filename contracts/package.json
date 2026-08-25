@@ -10,7 +10,8 @@
     "proof-server:start": "docker compose up -d",
     "proof-server:stop": "docker compose down",
     "deploy:standalone": "tsx src/deploy.ts standalone",
-    "deploy:preprod": "tsx src/deploy.ts preprod",
+    "deploy:preprod": "NODE_OPTIONS=\"--max-old-space-size=8192\" tsx src/deploy.ts preprod",
+    "deploy:preview": "NODE_OPTIONS=\"--max-old-space-size=8192\" tsx src/deploy.ts preview",
     "verify": "echo 'Verify contract using Midnight wallet or SDK'"
   },
   "dependencies": {
@@ -21,6 +22,7 @@
     "@midnight-ntwrk/midnight-js-level-private-state-provider": "^4.0.4",
     "@midnight-ntwrk/midnight-js-node-zk-config-provider": "^4.0.4",
     "@midnight-ntwrk/midnight-js-protocol": "^4.1.1",
+    "@midnight-ntwrk/testkit-js": "^4.1.1",
     "@midnight-ntwrk/wallet-sdk": "^1.1.0",
     "ws": "^8.16.0"
   },
